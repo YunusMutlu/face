@@ -2,11 +2,32 @@ import cv2
 import argparse
 import warnings
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 
 from models import SCRFD, Attribute
 from utils.helpers import Face, draw_face_info
 
 warnings.filterwarnings("ignore")
+
+
+def select_file():
+    """Opens a file dialog to select an image or video file."""
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    
+    filetypes = [
+        ('Image files', '*.jpg *.jpeg *.png'),
+        ('Video files', '*.mp4 *.avi *.mov'),
+        ('All files', '*.*')
+    ]
+    
+    file_path = filedialog.askopenfilename(
+        title='Select an image or video file',
+        filetypes=filetypes
+    )
+    
+    return file_path if file_path else None
 
 
 def load_models(detection_model_path: str, attribute_model_path: str):
@@ -16,7 +37,6 @@ def load_models(detection_model_path: str, attribute_model_path: str):
         attribute_model_path (str): Path to the attribute model file.
     Returns
         tuple: A tuple containing the detection model and the attribute model.
-
     """
     try:
         detection_model = SCRFD(model_path=detection_model_path)
@@ -53,14 +73,10 @@ def inference_video(detection_model, attribute_model, video_source, save_output)
     Args:
         detection_model (SCRFD): The face detection model.
         attribute_model (Attribute): The attribute detection model.
-        video_source (str or int): Path to the input video file or camera index.
+        video_source (str): Path to the input video file.
         save_output (str): Path to save the output video.
     """
-    if video_source.isdigit() or video_source == '0':
-        cap = cv2.VideoCapture(int(video_source))
-    else:
-        cap = cv2.VideoCapture(video_source)
-
+    cap = cv2.VideoCapture(video_source)
     if not cap.isOpened():
         print("Failed to open video source")
         return
@@ -109,7 +125,7 @@ def run_face_analysis(detection_weights, attribute_weights, input_source, save_o
     """Runs face detection on the given input source."""
     detection_model, attribute_model = load_models(detection_weights, attribute_weights)
 
-    if isinstance(input_source, str) and input_source.lower().endswith(('.jpg', '.png', '.jpeg')):
+    if input_source.lower().endswith(('.jpg', '.png', '.jpeg')):
         inference_image(detection_model, attribute_model, input_source, save_output)
     else:
         inference_video(detection_model, attribute_model, input_source, save_output)
@@ -133,14 +149,20 @@ def main():
     parser.add_argument(
         '--source',
         type=str,
-        default="0",
-        help='Path to the input image or video file or camera index (0, 1, ...)'
+        help='Path to the input image or video file'
     )
     parser.add_argument('--output', type=str, help='Path to save the output image or video')
     args = parser.parse_args()
+
+    # If no source is provided, open file dialog
+    if not args.source:
+        args.source = select_file()
+        if not args.source:
+            print("No file selected. Exiting...")
+            return
 
     run_face_analysis(args.detection_weights, args.attribute_weights, args.source, args.output)
 
 
 if __name__ == "__main__":
-    main()
+    main() 

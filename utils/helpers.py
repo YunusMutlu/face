@@ -42,6 +42,15 @@ class Face:
             return None
         return 'M' if self.gender == 1 else 'F'
 
+    @property
+    def age_range(self) -> Optional[str]:
+        """Returns the age as a range in 5-year intervals."""
+        if self.age is None:
+            return None
+        lower = (self.age // 5) * 5
+        upper = lower + 5
+        return f"{lower}-{upper}"
+
 
 def image_alignment(image, center, output_size, scale):
     T = SimilarityTransform(
@@ -220,5 +229,5 @@ def draw_face_info(frame: np.ndarray, face: Face) -> None:
         face (Face): Face cooridnates, keypoints and attributes
     """
     draw_corners(frame, face.bbox)
-    put_text(frame, f"{face.sex} {face.age}", face.bbox)
+    put_text(frame, f"{face.sex} {face.age_range}", face.bbox)
     draw_keypoints(frame, face.kps)
