@@ -133,7 +133,7 @@ def main():
     parser.add_argument(
         '--source',
         type=str,
-        default="assets/in_image.jpg",
+        default="0",
         help='Path to the input image or video file or camera index (0, 1, ...)'
     )
     parser.add_argument('--output', type=str, help='Path to save the output image or video')
